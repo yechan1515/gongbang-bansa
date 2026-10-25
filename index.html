@@ -6,82 +6,81 @@
 <title>공방반사</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;padding:16px;background:#101522;color:#f5f7ff;font-family:system-ui,sans-serif;text-align:center}
+body{margin:0;padding:16px;background:#101522;color:#f4f7ff;font-family:system-ui,sans-serif;text-align:center}
 h1{color:#8ee8ff}
 .card{max-width:520px;margin:14px auto;padding:18px;background:#1c2639;border-radius:18px}
 input,button{font:inherit;border:0;border-radius:10px;padding:12px}
-input{display:block;width:100%;margin:8px 0}
-button{background:#65d7f2;color:#10202c;font-weight:bold;margin:4px;cursor:pointer}
-button:disabled{opacity:.4}
+input{display:block;width:100%;margin:8px 0;background:#fff;color:#111}
+button{margin:4px;background:#65d7f2;color:#10202c;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.actions button{min-height:65px;font-size:18px}
+.actions button{min-height:64px;font-size:18px}
 .stats{display:flex;justify-content:space-around;gap:12px}
 .hp{font-size:28px;font-weight:bold}
-.muted{color:#bac7dd;font-size:13px}
+.muted{font-size:13px;color:#bac7dd}
 .hidden{display:none}
-#status{white-space:pre-line;line-height:1.6}
-#log{text-align:left;max-height:220px;overflow:auto;line-height:1.8}
-footer{font-size:12px;color:#9aa8bd;line-height:1.8;margin:25px}
+#status{white-space:pre-line;line-height:1.7}
+#log{text-align:left;max-height:200px;overflow:auto;line-height:1.8}
+footer{margin:24px;color:#9aa8bd;font-size:12px;line-height:1.8}
 </style>
 </head>
 <body>
 
 <h1>⚔️ 공방반사</h1>
-<p class="muted">온라인 2인 실시간 대전</p>
+<p class="muted">온라인 실시간 2인 대전</p>
 
 <section class="card" id="lobby">
-<h2>온라인 대전</h2>
-<input id="playerName" maxlength="12" placeholder="내 이름">
-<input id="roomCode" maxlength="12" placeholder="참가할 방 코드">
-<button id="createBtn">방 만들기</button>
-<button id="joinBtn">방 참가</button>
-<p id="lobbyStatus" class="muted">Firebase 연결 중...</p>
+  <h2>대전 로비</h2>
+  <input id="playerName" maxlength="12" placeholder="내 이름">
+  <input id="roomCode" maxlength="12" placeholder="참가할 방 코드">
+  <button id="createBtn">방 만들기</button>
+  <button id="joinBtn">방 참가</button>
+  <p id="lobbyStatus" class="muted">Firebase 연결 중...</p>
 </section>
 
 <section class="card">
-<h3>게임 설정</h3>
-<label>시작 HP</label>
-<input id="hpSetting" type="number" min="1" max="99" value="10">
-<label>선택 제한 시간 (초)</label>
-<input id="timeSetting" type="number" min="5" max="60" value="15">
-<p class="muted">방을 만드는 사람의 설정이 적용됩니다.</p>
+  <h3>게임 설정</h3>
+  <label>시작 HP</label>
+  <input id="hpSetting" type="number" min="1" max="99" value="10">
+  <label>행동 선택 시간 (초)</label>
+  <input id="timeSetting" type="number" min="5" max="60" value="15">
+  <p class="muted">방 생성자의 설정이 적용됩니다.</p>
 </section>
 
 <section class="card hidden" id="game">
-<p>방 코드: <b id="roomLabel"></b></p>
-<button id="copyBtn">방 코드 복사</button>
+  <p>방 코드: <b id="roomLabel"></b></p>
+  <button id="copyBtn">방 코드 복사</button>
 
-<div class="stats">
-<div>
-<div id="name0">플레이어 1</div>
-<div class="hp" id="hp0">❤️ 10</div>
-<div class="muted" id="reflect0">반사 준비됨</div>
-</div>
-<div>
-<div id="name1">플레이어 2</div>
-<div class="hp" id="hp1">❤️ 10</div>
-<div class="muted" id="reflect1">반사 준비됨</div>
-</div>
-</div>
+  <div class="stats">
+    <div>
+      <div id="name0">플레이어 1</div>
+      <div class="hp" id="hp0">❤️ 10</div>
+      <div class="muted" id="reflect0">반사 준비됨</div>
+    </div>
+    <div>
+      <div id="name1">플레이어 2</div>
+      <div class="hp" id="hp1">❤️ 10</div>
+      <div class="muted" id="reflect1">반사 준비됨</div>
+    </div>
+  </div>
 
-<hr style="border-color:#35435c;margin:18px 0">
-<p id="roundLabel">라운드 1</p>
-<div class="hp" id="timer">--</div>
-<p id="status">상대방을 기다리는 중...</p>
+  <hr style="border-color:#35435c;margin:18px 0">
+  <p id="roundLabel">라운드 1</p>
+  <div class="hp" id="timer">--</div>
+  <p id="status">상대방을 기다리는 중...</p>
 
-<div class="actions">
-<button data-action="attack">⚔️ 공격</button>
-<button data-action="defend">🛡️ 방어</button>
-<button data-action="reflect">🔁 반사</button>
-<button data-action="pass">⏭️ 패스</button>
-</div>
+  <div class="actions">
+    <button data-action="attack">⚔️ 공격</button>
+    <button data-action="defend">🛡️ 방어</button>
+    <button data-action="reflect">🔁 반사</button>
+    <button data-action="pass">⏭️ 패스</button>
+  </div>
 
-<p class="muted">공격은 피해 1 · 방어는 공격 차단</p>
-<p class="muted">반사는 공격을 되돌리고, 패스는 반사를 재충전합니다.</p>
-
-<h3>전투 기록</h3>
-<div id="log"></div>
-<button id="leaveBtn">로비로 돌아가기</button>
+  <p class="muted">공격: 피해 1 · 방어: 공격 차단</p>
+  <p class="muted">반사: 공격 되돌리기 · 패스: 반사 재충전</p>
+  <h3>전투 기록</h3>
+  <div id="log"></div>
+  <button id="leaveBtn">로비로 돌아가기</button>
 </section>
 
 <footer>
@@ -110,8 +109,8 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.database();
-
 const $ = id => document.getElementById(id);
+
 const actionNames = {
   attack: "공격",
   defend: "방어",
@@ -123,53 +122,29 @@ let uid = null;
 let roomId = null;
 let mySlot = -1;
 let roomRef = null;
-let listener = null;
+let roomListener = null;
 let roomData = null;
-let clock = null;
-let advancing = false;
-let lastLoggedRound = 0;
-let advanceTimer = null;
+let timerId = null;
+let operationBusy = false;
+let loggedRounds = new Set();
+let scheduledRound = null;
 
-function say(text) {
+function message(text) {
   $("lobbyStatus").textContent = text;
 }
 
-function getName() {
+function playerName() {
   return ($("playerName").value.trim() || "플레이어").slice(0, 12);
 }
 
-function makeCode() {
+function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
-function setButtons(enabled) {
+function setActions(enabled) {
   document.querySelectorAll("[data-action]").forEach(button => {
     button.disabled = !enabled;
   });
-}
-
-function stopClock() {
-  if (clock) clearInterval(clock);
-  clock = null;
-}
-
-function disconnectRoom() {
-  stopClock();
-
-  if (roomRef && listener) {
-    roomRef.off("value", listener);
-  }
-
-  if (advanceTimer) clearTimeout(advanceTimer);
-  advanceTimer = null;
-
-  roomRef = null;
-  listener = null;
-  roomData = null;
-  roomId = null;
-  mySlot = -1;
-  advancing = false;
-  lastLoggedRound = 0;
 }
 
 function showGame() {
@@ -182,92 +157,194 @@ function showLobby() {
   $("lobby").classList.remove("hidden");
 }
 
+function stopTimer() {
+  if (timerId) clearInterval(timerId);
+  timerId = null;
+}
+
+function disconnectRoom() {
+  stopTimer();
+
+  if (roomRef && roomListener) {
+    roomRef.off("value", roomListener);
+  }
+
+  roomRef = null;
+  roomListener = null;
+  roomData = null;
+  roomId = null;
+  mySlot = -1;
+  operationBusy = false;
+  scheduledRound = null;
+  loggedRounds.clear();
+}
+
 function addLog(text) {
-  const item = document.createElement("div");
-  item.textContent = text;
-  $("log").prepend(item);
+  const div = document.createElement("div");
+  div.textContent = text;
+  $("log").prepend(div);
+}
+
+function reportError(prefix, error) {
+  const text = prefix + ": " + (error && error.message ? error.message : error);
+  $("status").textContent = text;
+  message(text);
 }
 
 async function createRoom() {
-  if (!uid) return say("로그인 중입니다. 잠시 기다려 주세요.");
+  if (!uid) {
+    message("로그인 중입니다. 잠시 기다려 주세요.");
+    return;
+  }
 
-  const id = makeCode();
   const hp = Math.max(1, Math.min(99, Number($("hpSetting").value) || 10));
   const seconds = Math.max(5, Math.min(60, Number($("timeSetting").value) || 15));
 
-  const room = {
-    host: uid,
-    status: "waiting",
-    settings: { hp, seconds },
-    round: 1,
-    resolvedRound: 0,
-    players: {
-      0: { uid, name: getName(), hp, reflectReady: true },
-      1: null
-    },
-    choices: {},
-    history: {},
-    deadline: null,
-    updatedAt: Date.now()
-  };
+  message("방 생성 중...");
 
   try {
-    await db.ref("rooms/" + id).set(room);
+    let id = "";
+    let created = false;
+
+    for (let i = 0; i < 5; i++) {
+      id = makeRoomCode();
+      const ref = db.ref("rooms/" + id);
+
+      const result = await ref.transaction(old => {
+        if (old !== null) return;
+        return {
+          host: uid,
+          status: "waiting",
+          settings: { hp, seconds },
+          round: 1,
+          resolvedRound: 0,
+          players: {
+            0: {
+              uid,
+              name: playerName(),
+              hp,
+              reflectReady: true
+            },
+            1: null
+          },
+          choices: {},
+          history: {},
+          deadline: null,
+          updatedAt: Date.now()
+        };
+      }, undefined, false);
+
+      if (result.committed) {
+        created = true;
+        break;
+      }
+    }
+
+    if (!created) {
+      message("방 코드를 만들지 못했습니다. 다시 시도하세요.");
+      return;
+    }
+
     await enterRoom(id, 0);
   } catch (error) {
-    say("방 생성 실패: " + error.message);
+    reportError("방 생성 실패", error);
   }
 }
 
 async function joinRoom() {
-  if (!uid) return say("로그인 중입니다. 잠시 기다려 주세요.");
+  if (!uid) {
+    message("로그인 중입니다. 잠시 기다려 주세요.");
+    return;
+  }
 
   const id = $("roomCode").value.trim().toUpperCase()
     .replace(/[^A-Z0-9_-]/g, "").slice(0, 12);
 
-  if (!id) return say("방 코드를 입력하세요.");
+  if (!id) {
+    message("방 코드를 입력하세요.");
+    return;
+  }
 
-  const ref = db.ref("rooms/" + id);
+  message("방 확인 중...");
 
   try {
-    const result = await ref.transaction(room => {
-      if (!room || room.status !== "waiting") return;
-      if (!room.players || !room.players[0] || room.players[1]) return;
-      if (room.players[0].uid === uid) return;
+    const ref = db.ref("rooms/" + id);
 
-      const hp = Number(room.settings.hp) || 10;
+    /*
+      먼저 방을 읽어서 실제 상태를 확인합니다.
+      읽기 권한이 없거나 방이 없다면 원인을 별도로 표시합니다.
+    */
+    const snapshot = await ref.once("value");
+    const room = snapshot.val();
 
-      room.players[1] = {
+    if (!room) {
+      message("해당 방이 없습니다. 방 코드와 방 생성 여부를 확인하세요.");
+      return;
+    }
+
+    if (room.status !== "waiting") {
+      message("이 방은 이미 시작했거나 종료되었습니다.");
+      return;
+    }
+
+    if (!room.players || !room.players[0]) {
+      message("방 생성자의 정보가 없습니다.");
+      return;
+    }
+
+    if (room.players[0].uid === uid) {
+      message("방 생성자와 같은 로그인입니다. 다른 휴대폰에서 참가하세요.");
+      return;
+    }
+
+    if (room.players[1]) {
+      message("이 방은 이미 꽉 찼습니다.");
+      return;
+    }
+
+    /*
+      실제 참가 등록은 방 참조의 transaction으로 처리합니다.
+      참가 버튼을 동시에 눌러도 한 명만 두 번째 자리를 차지합니다.
+    */
+    const result = await ref.transaction(data => {
+      if (!data || data.status !== "waiting") return;
+      if (!data.players || !data.players[0] || data.players[1]) return;
+      if (data.players[0].uid === uid) return;
+
+      const hp = Number(data.settings && data.settings.hp) || 10;
+
+      data.players[1] = {
         uid,
-        name: getName(),
+        name: playerName(),
         hp,
         reflectReady: true
       };
 
-      room.status = "playing";
-      room.round = 1;
-      room.resolvedRound = 0;
-      room.choices = {};
-      room.deadline = Date.now() + (Number(room.settings.seconds) || 15) * 1000;
-      room.updatedAt = Date.now();
+      data.status = "playing";
+      data.round = 1;
+      data.resolvedRound = 0;
+      data.choices = {};
+      data.deadline = Date.now() + (Number(data.settings.seconds) || 15) * 1000;
+      data.updatedAt = Date.now();
 
-      return room;
+      return data;
     }, undefined, false);
 
     if (!result.committed) {
-      say("참가 실패: 방이 없거나 이미 시작했거나 꽉 찼습니다.");
+      message("참가가 완료되지 않았습니다. 방 상태를 새로 확인하고 다시 시도하세요.");
       return;
     }
 
-    if (!result.snapshot.val().players[1] ||
-        result.snapshot.val().players[1].uid !== uid) {
-      say("방 참가에 실패했습니다.");
+    const joinedRoom = result.snapshot.val();
+
+    if (!joinedRoom.players[1] || joinedRoom.players[1].uid !== uid) {
+      message("참가가 완료되지 않았습니다. 이미 다른 플레이어가 참가했을 수 있습니다.");
       return;
     }
 
     await enterRoom(id, 1);
   } catch (error) {
-    say("참가 실패: " + error.message);
+    reportError("방 참가 실패", error);
   }
 }
 
@@ -283,95 +360,99 @@ async function enterRoom(id, slot) {
 
   showGame();
 
-  listener = roomRef.on("value", snapshot => {
+  roomListener = roomRef.on("value", snapshot => {
     roomData = snapshot.val();
 
     if (!roomData) {
-      $("status").textContent = "방이 삭제되었습니다.";
-      setButtons(false);
+      $("status").textContent = "방 데이터가 없어졌습니다.";
+      setActions(false);
       return;
     }
 
     renderRoom(roomData);
   }, error => {
-    $("status").textContent = "연결 오류: " + error.message;
+    reportError("실시간 연결 실패", error);
   });
 }
 
 function renderRoom(room) {
-  const p = room.players || {};
+  const players = room.players || {};
 
-  $("name0").textContent = p[0] ? p[0].name : "플레이어 1";
-  $("name1").textContent = p[1] ? p[1].name : "상대방 대기 중";
-  $("hp0").textContent = "❤️ " + (p[0] ? p[0].hp : "—");
-  $("hp1").textContent = "❤️ " + (p[1] ? p[1].hp : "—");
+  $("name0").textContent = players[0] ? players[0].name : "플레이어 1";
+  $("name1").textContent = players[1] ? players[1].name : "상대방 대기 중";
+  $("hp0").textContent = "❤️ " + (players[0] ? players[0].hp : "—");
+  $("hp1").textContent = "❤️ " + (players[1] ? players[1].hp : "—");
 
   $("reflect0").textContent =
-    p[0] && p[0].reflectReady ? "반사 준비됨" : "반사 사용함";
+    players[0] && players[0].reflectReady ? "반사 준비됨" : "반사 사용함";
 
   $("reflect1").textContent =
-    p[1] && p[1].reflectReady ? "반사 준비됨" : "반사 사용함";
+    players[1] && players[1].reflectReady ? "반사 준비됨" : "반사 사용함";
 
   $("roundLabel").textContent = "라운드 " + (room.round || 1);
 
-  showRoundLog(room);
+  renderHistory(room);
 
   if (room.status === "waiting") {
-    $("status").textContent = "방 코드를 상대방에게 알려 주세요.";
+    $("status").textContent = "방 코드 " + roomId + " 를 상대방에게 알려 주세요.";
     $("timer").textContent = "대기 중";
-    stopClock();
-    setButtons(false);
+    stopTimer();
+    setActions(false);
     return;
   }
 
   if (room.status === "finished") {
-    stopClock();
-    setButtons(false);
+    stopTimer();
+    setActions(false);
 
     $("status").textContent = room.winner === "draw"
       ? "무승부!"
-      : p[room.winner].name + " 승리!";
+      : (players[room.winner] ? players[room.winner].name + " 승리!" : "게임 종료");
 
     $("timer").textContent = "종료";
     return;
   }
 
   if (room.status === "result") {
-    stopClock();
-    setButtons(false);
+    stopTimer();
+    setActions(false);
     $("status").textContent = room.lastResult || "라운드 결과";
     $("timer").textContent = "결과";
     scheduleNextRound(room);
     return;
   }
 
-  const mine = room.choices && room.choices[mySlot];
-  const theirs = room.choices && room.choices[1 - mySlot];
-
-  if (mine) {
-    $("status").textContent = theirs
-      ? "두 플레이어가 모두 선택했습니다."
-      : "선택 완료! 상대방을 기다리는 중...";
-    setButtons(false);
-  } else {
-    $("status").textContent = "행동을 선택하세요!";
-    setButtons(true);
+  if (room.status !== "playing") {
+    $("status").textContent = "알 수 없는 게임 상태입니다.";
+    setActions(false);
+    return;
   }
 
-  startClock(room);
-  resolveIfReady(room);
+  const myChoice = room.choices && room.choices[mySlot];
+  const enemyChoice = room.choices && room.choices[1 - mySlot];
+
+  if (myChoice) {
+    $("status").textContent = enemyChoice
+      ? "두 플레이어가 모두 선택했습니다. 결과 처리 중..."
+      : "선택 완료! 상대방을 기다리는 중...";
+    setActions(false);
+  } else {
+    $("status").textContent = "행동을 선택하세요!";
+    setActions(true);
+  }
+
+  startTimer();
+  resolveRoundIfReady(room);
 }
 
-function startClock(room) {
-  stopClock();
+function startTimer() {
+  stopTimer();
 
   function tick() {
     if (!roomData || roomData.status !== "playing") return;
 
-    const remaining = Math.max(
-      0,
-      Math.ceil(((roomData.deadline || 0) - Date.now()) / 1000)
-    );
+    const deadline = Number(roomData.deadline) || 0;
+    const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
 
     $("timer").textContent = remaining + "초";
 
@@ -379,50 +460,48 @@ function startClock(room) {
   }
 
   tick();
-  clock = setInterval(tick, 250);
+  timerId = setInterval(tick, 250);
 }
 
 async function timeoutRound() {
-  if (!roomRef || !roomData || roomData.status !== "playing" || advancing) return;
-  if (Date.now() < (roomData.deadline || 0)) return;
+  if (!roomRef || !roomData || roomData.status !== "playing" || operationBusy) return;
+  if (Date.now() < (Number(roomData.deadline) || 0)) return;
 
-  advancing = true;
+  operationBusy = true;
 
   try {
-    await roomRef.transaction(room => {
-      if (!room || room.status !== "playing") return;
-      if (Date.now() < (room.deadline || 0)) return;
+    await roomRef.transaction(data => {
+      if (!data || data.status !== "playing") return;
+      if (Date.now() < (Number(data.deadline) || 0)) return;
 
-      room.choices = room.choices || {};
+      data.choices = data.choices || {};
 
       for (const slot of [0, 1]) {
-        if (!room.choices[slot]) {
-          room.choices[slot] = {
+        if (!data.choices[slot]) {
+          data.choices[slot] = {
             action: "pass",
-            at: room.deadline,
+            at: Number(data.deadline) || Date.now(),
             timeout: true
           };
         }
       }
 
-      return room;
+      return data;
     }, undefined, false);
   } catch (error) {
-    $("status").textContent = "시간 종료 처리 실패: " + error.message;
+    reportError("시간 종료 처리 실패", error);
   } finally {
-    advancing = false;
+    operationBusy = false;
   }
 
-  if (roomData) resolveIfReady(roomData);
+  if (roomData) resolveRoundIfReady(roomData);
 }
 
 async function chooseAction(action) {
-  const room = roomData;
+  if (!roomRef || !roomData || roomData.status !== "playing" || operationBusy) return;
+  if (roomData.choices && roomData.choices[mySlot]) return;
 
-  if (!room || room.status !== "playing" || advancing) return;
-  if (room.choices && room.choices[mySlot]) return;
-
-  const me = room.players && room.players[mySlot];
+  const me = roomData.players && roomData.players[mySlot];
 
   if (!me || me.uid !== uid) {
     $("status").textContent = "플레이어 정보를 확인할 수 없습니다.";
@@ -430,38 +509,39 @@ async function chooseAction(action) {
   }
 
   if (action === "reflect" && !me.reflectReady) {
-    $("status").textContent = "반사가 없습니다. 패스로 재충전하세요.";
+    $("status").textContent = "반사를 사용할 수 없습니다. 패스로 재충전하세요.";
     return;
   }
 
-  setButtons(false);
+  setActions(false);
 
   try {
-    const result = await roomRef.child("choices/" + mySlot)
-      .transaction(existing => {
-        if (existing) return;
-        if (!roomData || roomData.status !== "playing") return;
-        if (Date.now() >= (roomData.deadline || 0)) return;
+    const choiceRef = roomRef.child("choices/" + mySlot);
 
-        return { action, at: Date.now() };
-      }, undefined, false);
+    const result = await choiceRef.transaction(existing => {
+      if (existing) return;
+      if (!roomData || roomData.status !== "playing") return;
+      if (Date.now() >= (Number(roomData.deadline) || 0)) return;
+
+      return { action, at: Date.now() };
+    }, undefined, false);
 
     if (!result.committed) {
-      $("status").textContent = "선택 실패. 화면 상태를 확인하세요.";
+      $("status").textContent = "선택이 반영되지 않았습니다. 화면을 확인하세요.";
     }
   } catch (error) {
-    $("status").textContent = "선택 오류: " + error.message;
+    reportError("행동 선택 실패", error);
   }
 }
 
-async function resolveIfReady(room) {
-  if (!roomRef || !room || room.status !== "playing" || advancing) return;
+async function resolveRoundIfReady(room) {
+  if (!roomRef || !room || room.status !== "playing" || operationBusy) return;
 
   const choices = room.choices || {};
   if (!choices[0] || !choices[1]) return;
 
-  advancing = true;
-  stopClock();
+  operationBusy = true;
+  stopTimer();
 
   try {
     await roomRef.transaction(data => {
@@ -469,11 +549,11 @@ async function resolveIfReady(room) {
 
       const c = data.choices || {};
       if (!c[0] || !c[1]) return;
-      if (data.resolvedRound >= data.round) return;
+      if ((Number(data.resolvedRound) || 0) >= (Number(data.round) || 1)) return;
 
       const players = data.players;
-      const a = c[0].action;
-      const b = c[1].action;
+      const action0 = c[0].action;
+      const action1 = c[1].action;
       const messages = [];
 
       function damage(slot, amount, reason) {
@@ -481,7 +561,7 @@ async function resolveIfReady(room) {
         messages.push(players[slot].name + " 피해 -" + amount + " (" + reason + ")");
       }
 
-      function attack(attacker, defender, defenderAction) {
+      function processAttack(attacker, defender, defenderAction) {
         const target = players[defender];
 
         if (defenderAction === "defend") {
@@ -495,39 +575,36 @@ async function resolveIfReady(room) {
         }
       }
 
-      if (a === "attack" && b === "attack") {
-        const delta = Math.abs(c[0].at - c[1].at);
+      if (action0 === "attack" && action1 === "attack") {
+        const t0 = Number(c[0].at) || 0;
+        const t1 = Number(c[1].at) || 0;
+        const delta = Math.abs(t0 - t1);
 
-        if (delta <= 2000) {
-          if (c[0].at === c[1].at) {
-            messages.push("동시 공격! 두 공격 모두 실패!");
-          } else {
-            const faster = c[0].at < c[1].at ? 0 : 1;
-            damage(1 - faster, 1, "빠른 공격");
-            messages.push(players[faster].name + "의 공격이 먼저 적중!");
-          }
+        if (delta <= 2000 && t0 === t1) {
+          messages.push("동시 공격! 두 공격 모두 실패!");
         } else {
-          const faster = c[0].at < c[1].at ? 0 : 1;
+          const faster = t0 <= t1 ? 0 : 1;
           damage(1 - faster, 1, "빠른 공격");
+          messages.push(players[faster].name + "의 공격이 먼저 적중!");
         }
       } else {
-        if (a === "attack") attack(0, 1, b);
-        if (b === "attack") attack(1, 0, a);
+        if (action0 === "attack") processAttack(0, 1, action1);
+        if (action1 === "attack") processAttack(1, 0, action0);
       }
 
-      if (a === "pass") {
+      if (action0 === "pass") {
         players[0].reflectReady = true;
         messages.push(players[0].name + " 반사 재충전!");
       }
 
-      if (b === "pass") {
+      if (action1 === "pass") {
         players[1].reflectReady = true;
         messages.push(players[1].name + " 반사 재충전!");
       }
 
       data.history = data.history || {};
       data.history[data.round] = {
-        actions: { 0: a, 1: b },
+        actions: { 0: action0, 1: action1 },
         messages,
         at: Date.now()
       };
@@ -553,21 +630,21 @@ async function resolveIfReady(room) {
       return data;
     }, undefined, false);
   } catch (error) {
-    $("status").textContent = "라운드 처리 실패: " + error.message;
+    reportError("라운드 처리 실패", error);
   } finally {
-    advancing = false;
+    operationBusy = false;
   }
 }
 
-function showRoundLog(room) {
-  const round = room.resolvedRound || 0;
+function renderHistory(room) {
+  const round = Number(room.resolvedRound) || 0;
 
-  if (!round || round <= lastLoggedRound) return;
+  if (!round || loggedRounds.has(round)) return;
 
   const record = room.history && room.history[round];
   if (!record) return;
 
-  lastLoggedRound = round;
+  loggedRounds.add(round);
 
   addLog("— 라운드 " + round + " —");
   addLog("나: " + actionNames[record.actions[mySlot]]);
@@ -577,17 +654,18 @@ function showRoundLog(room) {
 }
 
 function scheduleNextRound(room) {
-  if (!room.nextRoundAt || advanceTimer) return;
+  if (!room.nextRoundAt || scheduledRound === room.round) return;
 
-  const round = room.round;
+  scheduledRound = room.round;
+  const finishedRound = room.round;
 
-  advanceTimer = setTimeout(async () => {
-    advanceTimer = null;
+  setTimeout(async () => {
+    if (!roomRef) return;
 
     try {
       await roomRef.transaction(data => {
         if (!data || data.status !== "result") return;
-        if (data.round !== round) return;
+        if (data.round !== finishedRound) return;
 
         data.round += 1;
         data.choices = {};
@@ -598,7 +676,7 @@ function scheduleNextRound(room) {
         return data;
       }, undefined, false);
     } catch (error) {
-      $("status").textContent = "다음 라운드 시작 실패: " + error.message;
+      reportError("다음 라운드 시작 실패", error);
     }
   }, Math.max(0, room.nextRoundAt - Date.now()));
 }
@@ -622,16 +700,16 @@ $("copyBtn").addEventListener("click", async () => {
 $("leaveBtn").addEventListener("click", () => {
   disconnectRoom();
   showLobby();
-  say("로비로 돌아왔습니다.");
+  message("로비로 돌아왔습니다.");
 });
 
 auth.signInAnonymously()
   .then(credential => {
     uid = credential.user.uid;
-    say("로그인 완료! 방을 만들거나 참가하세요.");
+    message("로그인 완료! 방을 만들거나 참가하세요.");
   })
   .catch(error => {
-    say("로그인 실패: " + error.message +
+    message("로그인 실패: " + error.message +
       "\nFirebase Authentication에서 익명 로그인을 활성화하세요.");
   });
 </script>
