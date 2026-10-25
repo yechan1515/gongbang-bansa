@@ -311,22 +311,21 @@ async function joinRoom() {
   joiningRoom = true;
   $("joinBtn").disabled = true;
   $("createBtn").disabled = true;
-  message("방 확인 중...");
 
   try {
     const ref = db.ref("rooms/" + id);
+    message("방 확인 중...");
 
-    // 서버에서 현재 방 상태를 먼저 읽습니다.
     const snapshot = await ref.once("value");
     const room = snapshot.val();
 
     if (!room) {
-      message("참가 실패: 해당 방이 없습니다. 방 코드를 확인하세요.");
+      message("참가 실패: 방이 존재하지 않습니다.");
       return;
     }
 
     if (room.status !== "waiting") {
-      message("참가 실패: 방 상태가 '" + room.status + "'입니다.");
+      message("참가 실패: 대기 중인 방이 아닙니다.");
       return;
     }
 
@@ -336,88 +335,61 @@ async function joinRoom() {
     }
 
     if (room.players[0].uid === uid) {
-      message("참가 실패: 방 생성자와 같은 로그인입니다. 다른 휴대폰에서 시도하세요.");
+      message("참가 실패: 방을 만든 계정과 같은 계정입니다.");
       return;
     }
 
     if (room.players[1]) {
-      message("참가 실패: 이미 두 번째 플레이어가 참가했습니다.");
+      message("참가 실패: 이미 다른 플레이어가 참가했습니다.");
       return;
     }
 
     message("참가 등록 중...");
 
-    /*
-     * 참가 여부를 방 전체 트랜잭션으로 처리합니다.
-     * 두 명이 동시에 참가를 시도해도 한 명만 등록됩니다.
-     */
-    const result = await ref.transaction(data => {
-      if (!data) return;
-      if (data.status !== "waiting") return;
-      if (!data.players || !data.players[0]) return;
-      if (data.players[0].uid === uid) return;
-      if (data.players[1]) return;
+    // 두 번째 플레이어 자리만 트랜잭션으로 확보
+    const playerRef = ref.child("players/1");
+    const player = {
+      uid: uid,
+      name: playerName(),
+      hp: Number(room.settings?.hp) || 10,
+      reflectReady: true
+    };
 
-      const hp = Number(data.settings && data.settings.hp) || 10;
-      const seconds = Number(data.settings && data.settings.seconds) || 15;
-
-      data.players[1] = {
-        uid: uid,
-        name: playerName(),
-        hp: hp,
-        reflectReady: true
-      };
-
-      data.status = "playing";
-      data.round = 1;
-      data.resolvedRound = 0;
-      data.choices = {};
-      data.deadline = Date.now() + seconds * 1000;
-      data.updatedAt = Date.now();
-
-      return data;
+    const result = await playerRef.transaction(current => {
+      if (current !== null) return;
+      return player;
     }, undefined, false);
 
-    /*
-     * 트랜잭션이 중단되면 최신 상태를 다시 읽고
-     * 가능한 원인을 구분해서 안내합니다.
-     */
     if (!result.committed) {
-      const latestSnapshot = await ref.once("value");
-      const latest = latestSnapshot.val();
+      const latest = (await ref.once("value")).val();
 
-      if (!latest) {
-        message("참가 실패: 방 데이터가 사라졌습니다.");
-      } else if (latest.players?.[1]?.uid === uid) {
-        // 이미 서버에 등록된 경우는 성공으로 처리합니다.
+      if (latest?.players?.[1]?.uid === uid) {
         await enterRoom(id, 1);
-      } else if (latest.status !== "waiting") {
-        message("참가 실패: 방 상태가 '" + latest.status + "'로 변경되었습니다.");
-      } else if (latest.players?.[0]?.uid === uid) {
-        message("참가 실패: 방 생성자와 같은 로그인입니다.");
-      } else if (latest.players?.[1]) {
+        return;
+      }
+
+      if (latest?.players?.[1]) {
         message("참가 실패: 다른 플레이어가 먼저 참가했습니다.");
       } else {
         message(
-          "참가 등록이 중단되었습니다.\n" +
-          "Firebase 연결과 Realtime Database 규칙을 확인하세요."
+          "참가 등록 실패: Firebase Database 규칙을 확인하세요."
         );
       }
 
       return;
     }
 
-    const joinedRoom = result.snapshot.val();
-
-    if (
-      !joinedRoom ||
-      !joinedRoom.players ||
-      !joinedRoom.players[1] ||
-      joinedRoom.players[1].uid !== uid
-    ) {
-      message("참가 확인 실패: 참가자 정보가 일치하지 않습니다.");
-      return;
-    }
+    // 플레이어 등록 성공 후 게임 시작 정보 갱신
+    await ref.update({
+      status: "playing",
+      round: 1,
+      resolvedRound: 0,
+      choices: {},
+      deadline:
+        Date.now() +
+        (Number(room.settings?.seconds) || 15) * 1000,
+      updatedAt: Date.now()
+    });
 
     await enterRoom(id, 1);
 
