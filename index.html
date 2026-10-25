@@ -2,755 +2,585 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>공방반사</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#101522;color:#f4f6ff;font-family:system-ui,sans-serif;padding:16px}
-main{max-width:650px;margin:auto}
-h1{text-align:center;font-size:32px}
-h2{font-size:20px}
-.card{background:#1b2335;border:1px solid #303b53;border-radius:16px;padding:16px;margin:14px 0}
+body{margin:0;padding:18px;background:#101522;color:#f5f7ff;font-family:system-ui,sans-serif;text-align:center}
+h1{margin:8px 0;color:#8ee8ff}
+.card{max-width:520px;margin:14px auto;padding:18px;background:#1c2639;border-radius:18px}
 input,button{font:inherit;border-radius:10px;padding:12px;border:0}
-input{width:100%;background:#0f1522;color:white;border:1px solid #47536b;margin:5px 0}
-button{cursor:pointer;font-weight:bold;background:#7189ff;color:white;margin:4px}
+input{width:100%;margin:5px 0;background:#f3f6ff;color:#101522}
+button{cursor:pointer;background:#65d7f2;color:#10202c;font-weight:700;margin:4px}
 button:disabled{opacity:.4;cursor:not-allowed}
-.row{display:flex;gap:7px;flex-wrap:wrap}
-.row button{flex:1;min-width:100px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.stat{background:#101725;border-radius:12px;padding:14px;text-align:center}
-.hp{font-size:27px;font-weight:bold}
-.muted{color:#aab5ce;font-size:14px}
-#status{white-space:pre-wrap;line-height:1.7}
-#log{white-space:pre-wrap;line-height:1.7;max-height:230px;overflow:auto}
-.hidden{display:none!important}
-.attack{background:#e65353}
-.defend{background:#318bdf}
-.reflect{background:#9862ed}
-.pass{background:#64748b}
-.good{color:#73e4a0}
-.bad{color:#ff8888}
-footer{text-align:center;color:#9aa5bd;font-size:13px;padding:20px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.actions button{min-height:68px;font-size:18px}
+.stat{display:flex;justify-content:space-around;gap:8px;flex-wrap:wrap}
+.big{font-size:28px;font-weight:800}
+.muted{color:#bac7dd;font-size:14px}
+#status{white-space:pre-wrap;line-height:1.6}
+#log{max-height:190px;overflow:auto;text-align:left;line-height:1.8}
+.hidden{display:none}
+footer{margin:24px auto;color:#8e9ab0;font-size:12px;line-height:1.8}
 </style>
 </head>
 <body>
-<main>
-<h1>⚔️ 공방반사</h1>
-<p style="text-align:center" class="muted">실시간 2인용 심리전</p>
 
-<section class="card" id="connect">
-<h2>🌐 온라인 대전</h2>
-<p class="muted">방을 만들거나 상대가 만든 방에 참가하세요.</p>
-<label>방 코드</label>
-<input id="roomInput" maxlength="8" placeholder="예: A7K2P9">
-<div class="row">
-<button id="createBtn">방 만들기</button>
-<button id="joinBtn">방 참가</button>
-</div>
-<p id="connectionStatus" class="muted">Firebase 연결 준비 중...</p>
+<h1>⚔️ 공방반사</h1>
+<p class="muted">공격 · 방어 · 반사 · 패스 | 실시간 온라인 2인 대전</p>
+
+<section class="card" id="lobby">
+  <h2>온라인 대전</h2>
+  <p class="muted">한 명이 방을 만들고, 다른 사람이 방 코드를 입력하세요.</p>
+  <input id="playerName" maxlength="12" placeholder="내 이름">
+  <input id="roomCode" maxlength="12" placeholder="방 코드 (참가할 때)">
+  <button id="createBtn">방 만들기</button>
+  <button id="joinBtn">방 참가</button>
+  <p id="lobbyStatus" class="muted">Firebase 연결 준비 중...</p>
 </section>
 
 <section class="card hidden" id="game">
-<h2>방 코드: <span id="roomCode"></span></h2>
-<button id="copyBtn">방 코드 복사</button>
-<p id="status">상대방을 기다리는 중...</p>
+  <p>방 코드: <strong id="roomLabel"></strong>
+    <button id="copyBtn">코드 복사</button>
+  </p>
+  <div class="stat">
+    <div>
+      <div id="name0">플레이어 1</div>
+      <div class="big" id="hp0">❤️ 10</div>
+      <div class="muted" id="reflect0">반사 준비됨</div>
+    </div>
+    <div>
+      <div id="name1">플레이어 2</div>
+      <div class="big" id="hp1">❤️ 10</div>
+      <div class="muted" id="reflect1">반사 준비됨</div>
+    </div>
+  </div>
+  <hr style="border-color:#35435c;margin:18px 0">
+  <p id="roundLabel">라운드 1</p>
+  <p id="timer" class="big">--</p>
+  <p id="status">상대방을 기다리는 중...</p>
+  <div class="actions">
+    <button data-action="attack">⚔️ 공격</button>
+    <button data-action="defend">🛡️ 방어</button>
+    <button data-action="reflect">🔁 반사</button>
+    <button data-action="pass">⏭️ 패스</button>
+  </div>
+  <p class="muted">공격: 상대가 공격하면 공격 대결 · 방어: 공격 차단</p>
+  <p class="muted">반사: 공격을 상대에게 되돌림 · 패스: 반사 재충전</p>
+  <h3>전투 기록</h3>
+  <div id="log"></div>
+  <button id="leaveBtn">로비로 돌아가기</button>
+</section>
 
-<div class="stats">
-<div class="stat">
-<div id="p1name">플레이어 1</div>
-<div class="hp">❤️ <span id="hp1">10</span></div>
-<div id="p1state" class="muted">대기 중</div>
-</div>
-<div class="stat">
-<div id="p2name">플레이어 2</div>
-<div class="hp">❤️ <span id="hp2">10</span></div>
-<div id="p2state" class="muted">대기 중</div>
-</div>
-</div>
-
-<div id="hostSettings" class="hidden">
-<h2>⚙️ 게임 설정</h2>
-<label>시작 체력 (1~999)</label>
-<input type="number" id="hpSetting" min="1" max="999" value="10">
-<label>행동 선택 시간 (3~120초)</label>
-<input type="number" id="timeSetting" min="3" max="120" value="15">
-<button id="settingsBtn">설정 적용</button>
-<button id="startBtn">대전 시작</button>
-</div>
-
-<div id="battle" class="hidden">
-<h2>행동 선택</h2>
-<p>남은 시간: <b id="timer">--</b>초</p>
-<p class="muted">두 플레이어가 행동을 선택하면 결과가 판정돼요.</p>
-<div class="row">
-<button class="attack" data-action="attack">⚔️ 공격</button>
-<button class="defend" data-action="defend">🛡️ 방어</button>
-<button class="reflect" data-action="reflect">🔮 반사</button>
-<button class="pass" data-action="pass">⏭️ 패스</button>
-</div>
-<p id="myChoice">아직 선택하지 않았어요.</p>
-
-<div id="rpsBox" class="hidden">
-<h2>✊ 공격 승부!</h2>
-<p>2초 안에 가위바위보를 선택하세요.</p>
-<div class="row">
-<button data-rps="rock">✊ 바위</button>
-<button data-rps="paper">✋ 보</button>
-<button data-rps="scissors">✌️ 가위</button>
-</div>
-<p id="rpsStatus"></p>
-</div>
-</div>
-
-<h2>📜 전투 기록</h2>
-<div class="card" id="log">게임을 시작하면 기록이 표시됩니다.</div>
+<section class="card">
+  <h3>게임 설정</h3>
+  <label>시작 HP
+    <input id="hpSetting" type="number" min="1" max="99" value="10">
+  </label>
+  <label>선택 제한 시간 (초)
+    <input id="timeSetting" type="number" min="5" max="60" value="15">
+  </label>
+  <p class="muted">방을 만드는 사람이 설정을 사용합니다.</p>
 </section>
 
 <footer>
-공방반사<br>
-총괄 · 아이디어 : 이예찬<br>
-제작 · 코딩 : ChatGPT<br>
-© 2026
+  공방반사<br>
+  총괄 · 아이디어 : 이예찬<br>
+  제작 · 코딩 : ChatGPT<br>
+  © 2026
 </footer>
-</main>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
 <script>
-// ========================================
-// 1. Firebase 설정
-// Firebase 콘솔 → 프로젝트 설정 → 내 앱
-// ========================================
 const firebaseConfig = {
-  apiKey: "여기에_API_KEY",
-  authDomain: "여기에_PROJECT_ID.firebaseapp.com",
-  databaseURL: "여기에_REALTIME_DATABASE_URL",
-  projectId: "여기에_PROJECT_ID",
-  storageBucket: "여기에_STORAGE_BUCKET",
-  messagingSenderId: "여기에_MESSAGING_SENDER_ID",
-  appId: "여기에_APP_ID"
+  apiKey: "AIzaSyDArGtDypSSmWo6BiHDtQBaK5JeIkN0v14",
+  authDomain: "miniboardgame-25324.firebaseapp.com",
+  databaseURL: "https://miniboardgame-25324-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "miniboardgame-25324",
+  storageBucket: "miniboardgame-25324.firebasestorage.app",
+  messagingSenderId: "937903418490",
+  appId: "1:937903418490:web:723c9d64bdecb0fe0c5fc3"
 };
 
-// ========================================
-// 2. 게임 초기화
-// ========================================
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
 const $ = id => document.getElementById(id);
-
-let db, auth, uid, roomId, myRole, roomRef, unsubscribe;
-let roomData = null;
+let uid = null;
+let roomId = null;
+let mySlot = -1;
+let roomRef = null;
+let roomListener = null;
+let currentRoom = null;
 let timerInterval = null;
-let rpsTimerInterval = null;
-let lastRoundShown = -1;
-let busy = false;
+let resolving = false;
 
-const actions = {
-  attack: "공격",
-  defend: "방어",
-  reflect: "반사",
-  pass: "패스"
+const labels = {
+  attack: "⚔️ 공격",
+  defend: "🛡️ 방어",
+  reflect: "🔁 반사",
+  pass: "⏭️ 패스"
 };
 
-function randomCode() {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
+function setLobbyMessage(msg) {
+  $("lobbyStatus").textContent = msg;
 }
 
-function addLog(message) {
-  const log = $("log");
-  if (log.textContent === "게임을 시작하면 기록이 표시됩니다.") {
-    log.textContent = "";
-  }
-  log.textContent = message + "\n" + log.textContent;
+function makeCode() {
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
-function say(message) {
-  $("status").textContent = message;
+function safeName() {
+  return ($("playerName").value.trim() || "플레이어").slice(0, 12);
 }
 
-function setConnection(message) {
-  $("connectionStatus").textContent = message;
+function cleanRoomId(value) {
+  return value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 12);
 }
 
-function cleanRoomCode(value) {
-  return value.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+function showGame() {
+  $("lobby").classList.add("hidden");
+  $("game").classList.remove("hidden");
 }
 
-function isHost() {
-  return myRole === "p1";
+function showLobby() {
+  $("game").classList.add("hidden");
+  $("lobby").classList.remove("hidden");
 }
 
-function getPlayerName(role) {
-  return role === "p1" ? "플레이어 1" : "플레이어 2";
+function stopTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = null;
 }
 
-function playerPath(role) {
-  return "players/" + role;
+function detachRoom() {
+  stopTimer();
+  if (roomRef && roomListener) roomRef.off("value", roomListener);
+  roomRef = null;
+  roomListener = null;
+  roomId = null;
+  mySlot = -1;
+  currentRoom = null;
+  resolving = false;
 }
 
-function safeNumber(value, min, max, fallback) {
-  const n = Number(value);
-  return Number.isFinite(n) ? Math.max(min, Math.min(max, Math.floor(n))) : fallback;
+function appendLog(text) {
+  const line = document.createElement("div");
+  line.textContent = text;
+  $("log").prepend(line);
 }
 
-// ========================================
-// 3. Firebase 익명 로그인
-// ========================================
-async function initialize() {
-  try {
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+async function enterRoom(id, slot) {
+  detachRoom();
+  roomId = id;
+  mySlot = slot;
+  roomRef = db.ref("rooms/" + roomId);
+  $("roomLabel").textContent = roomId;
+  $("log").innerHTML = "";
+  showGame();
 
-    auth = firebase.auth();
-    db = firebase.database();
-
-    const credential = await auth.signInAnonymously();
-    uid = credential.user.uid;
-
-    setConnection("Firebase 로그인 완료! 방을 만들거나 참가하세요.");
-  } catch (error) {
-    console.error(error);
-    setConnection("연결 오류: " + error.message);
-  }
-}
-
-// ========================================
-// 4. 방 생성 및 참가
-// ========================================
-async function createRoom() {
-  if (!uid || busy) return;
-  busy = true;
-
-  try {
-    const code = randomCode();
-    const ref = db.ref("rooms/" + code);
-
-    const initialRoom = {
-      host: uid,
-      createdAt: firebase.database.ServerValue.TIMESTAMP,
-      settings: {
-        hp: 10,
-        actionTime: 15
-      },
-      players: {
-        p1: { uid, connected: true },
-        p2: null
-      },
-      game: {
-        started: false,
-        over: false,
-        round: 0,
-        hp1: 10,
-        hp2: 10,
-        reflect1: true,
-        reflect2: true,
-        phase: "waiting",
-        choices: {},
-        rps: {},
-        result: "",
-        log: "방을 만들었습니다."
-      }
-    };
-
-    const result = await ref.transaction(current => {
-      if (current === null) return initialRoom;
+  roomListener = roomRef.on("value", snap => {
+    currentRoom = snap.val();
+    if (!currentRoom) {
+      $("status").textContent = "방이 없어졌습니다.";
       return;
-    });
-
-    if (!result.committed) {
-      throw new Error("방 생성에 실패했어요. 다시 시도하세요.");
     }
+    renderRoom(currentRoom);
+  }, err => {
+    $("status").textContent = "데이터 읽기 오류: " + err.message;
+  });
+}
 
-    await enterRoom(code, "p1");
-  } catch (error) {
-    alert("방 생성 실패: " + error.message);
-  } finally {
-    busy = false;
+async function createRoom() {
+  if (!uid) return setLobbyMessage("로그인 중입니다. 잠시 후 다시 눌러 주세요.");
+
+  const id = makeCode();
+  const hp = Math.max(1, Math.min(99, Number($("hpSetting").value) || 10));
+  const seconds = Math.max(5, Math.min(60, Number($("timeSetting").value) || 15));
+
+  const room = {
+    host: uid,
+    status: "waiting",
+    settings: { hp, seconds },
+    round: 1,
+    players: {
+      0: { uid, name: safeName(), hp, reflectReady: true },
+      1: null
+    },
+    choices: {},
+    history: {},
+    deadline: null,
+    updatedAt: Date.now()
+  };
+
+  try {
+    await db.ref("rooms/" + id).set(room);
+    await enterRoom(id, 0);
+  } catch (err) {
+    setLobbyMessage("방 생성 실패: " + err.message);
   }
 }
 
 async function joinRoom() {
-  if (!uid || busy) return;
-  const code = cleanRoomCode($("roomInput").value);
+  if (!uid) return setLobbyMessage("로그인 중입니다. 잠시 후 다시 눌러 주세요.");
 
-  if (!code) {
-    alert("방 코드를 입력하세요.");
+  const id = cleanRoomId($("roomCode").value);
+  if (!id) return setLobbyMessage("방 코드를 입력하세요.");
+
+  const ref = db.ref("rooms/" + id);
+
+  try {
+    const result = await db.runTransaction(room => {
+      if (!room || room.status !== "waiting") return;
+      if (room.players && room.players[0] && room.players[0].uid === uid) return;
+      if (room.players && room.players[1]) return;
+
+      const hp = Number(room.settings && room.settings.hp) || 10;
+      room.players = room.players || {};
+      room.players[1] = {
+        uid,
+        name: safeName(),
+        hp,
+        reflectReady: true
+      };
+      room.status = "playing";
+      room.round = 1;
+      room.choices = {};
+      room.deadline = Date.now() + (Number(room.settings.seconds) || 15) * 1000;
+      return room;
+    }, undefined, false);
+
+    if (!result.committed) {
+      setLobbyMessage("참가 실패: 방이 없거나 이미 시작했거나 꽉 찼습니다.");
+      return;
+    }
+
+    const data = result.snapshot.val();
+    if (data.players[1].uid !== uid) {
+      setLobbyMessage("이 방에는 참가할 수 없습니다.");
+      return;
+    }
+
+    await enterRoom(id, 1);
+  } catch (err) {
+    setLobbyMessage("참가 실패: " + err.message);
+  }
+}
+
+function renderRoom(room) {
+  const players = room.players || {};
+  const p0 = players[0];
+  const p1 = players[1];
+
+  $("name0").textContent = p0 ? p0.name : "플레이어 1";
+  $("name1").textContent = p1 ? p1.name : "상대방 대기 중";
+  $("hp0").textContent = "❤️ " + (p0 ? p0.hp : "—");
+  $("hp1").textContent = "❤️ " + (p1 ? p1.hp : "—");
+  $("reflect0").textContent = p0 && p0.reflectReady ? "반사 준비됨" : "반사 사용함";
+  $("reflect1").textContent = p1 && p1.reflectReady ? "반사 준비됨" : "반사 사용함";
+  $("roundLabel").textContent = "라운드 " + (room.round || 1);
+
+  if (room.status === "waiting") {
+    $("status").textContent = "방 코드 " + roomId + " 를 상대방에게 알려 주세요.";
+    $("timer").textContent = "대기 중";
+    setButtons(false);
     return;
   }
 
-  busy = true;
-  try {
-    const ref = db.ref("rooms/" + code);
-    const result = await ref.transaction(current => {
-      if (!current || !current.players) return;
-
-      if (current.players.p1?.uid === uid) return current;
-      if (current.players.p2?.uid === uid) return current;
-
-      if (!current.players.p2 && !current.game?.started) {
-        current.players.p2 = { uid, connected: true };
-        return current;
-      }
-
-      return;
-    });
-
-    if (!result.committed) {
-      throw new Error("방이 없거나 이미 두 명이 참가 중이에요.");
-    }
-
-    const role = result.snapshot.val().players.p1.uid === uid ? "p1" : "p2";
-    await enterRoom(code, role);
-  } catch (error) {
-    alert("방 참가 실패: " + error.message);
-  } finally {
-    busy = false;
+  if (room.status === "finished") {
+    const winner = room.winner === "draw" ? "무승부!" :
+      (players[room.winner] ? players[room.winner].name + " 승리!" : "게임 종료");
+    $("status").textContent = winner;
+    $("timer").textContent = "종료";
+    setButtons(false);
+    return;
   }
-}
 
-async function enterRoom(code, role) {
-  roomId = code;
-  myRole = role;
-  roomRef = db.ref("rooms/" + code);
+  if (!p0 || !p1) {
+    $("status").textContent = "상대방 연결을 기다리는 중...";
+    setButtons(false);
+    return;
+  }
 
-  $("connect").classList.add("hidden");
-  $("game").classList.remove("hidden");
-  $("roomCode").textContent = code;
-  $("hostSettings").classList.toggle("hidden", !isHost());
+  const myChoice = room.choices && room.choices[mySlot];
+  const otherChoice = room.choices && room.choices[1 - mySlot];
 
-  if (unsubscribe) unsubscribe();
-
-  const listener = roomRef.on("value", snapshot => {
-    if (!snapshot.exists()) {
-      say("방이 삭제되었습니다.");
-      return;
-    }
-
-    roomData = snapshot.val();
-    renderRoom();
-  });
-
-  unsubscribe = () => roomRef.off("value", listener);
-
-  await roomRef.child("players/" + role + "/connected").set(true);
-}
-
-// ========================================
-// 5. 화면 갱신
-// ========================================
-function renderRoom() {
-  if (!roomData) return;
-
-  const g = roomData.game || {};
-  const players = roomData.players || {};
-
-  $("hp1").textContent = g.hp1 ?? 10;
-  $("hp2").textContent = g.hp2 ?? 10;
-  $("p1name").textContent = players.p1 ? "플레이어 1" : "플레이어 1 · 대기";
-  $("p2name").textContent = players.p2 ? "플레이어 2" : "플레이어 2 · 대기";
-
-  $("p1state").textContent = players.p1 ? "참가 완료" : "대기 중";
-  $("p2state").textContent = players.p2 ? "참가 완료" : "대기 중";
-
-  $("battle").classList.toggle("hidden", !g.started || g.over);
-  $("hostSettings").classList.toggle("hidden", !isHost() || g.started);
-
-  if (!g.started) {
-    say(players.p2
-      ? "두 명이 참가했어요. 방장이 대전을 시작할 수 있어요."
-      : "상대방이 방에 참가하기를 기다리는 중...");
-  } else if (g.over) {
-    say(g.result || "대전 종료");
+  if (myChoice) {
+    $("status").textContent = otherChoice
+      ? "두 사람 모두 선택했습니다. 결과 처리 중..."
+      : "선택 완료: " + labels[myChoice.action] + "\n상대방의 선택을 기다리는 중...";
+    setButtons(false);
   } else {
-    say("라운드 " + g.round + " · " + (g.phase === "rps" ? "가위바위보" : "행동 선택"));
+    $("status").textContent = "행동을 선택하세요!";
+    setButtons(true);
   }
 
-  const myAction = g.choices?.[myRole];
-  $("myChoice").textContent = myAction
-    ? "내 선택: " + (actions[myAction.action] || myAction.action)
-    : "아직 선택하지 않았어요.";
-
-  document.querySelectorAll("[data-action]").forEach(button => {
-    button.disabled = !g.started || g.over || g.phase !== "action" ||
-      !!g.choices?.[myRole];
-  });
-
-  document.querySelectorAll("[data-rps]").forEach(button => {
-    button.disabled = !g.started || g.over || g.phase !== "rps" ||
-      !!g.rps?.[myRole];
-  });
-
-  $("rpsBox").classList.toggle("hidden", g.phase !== "rps");
-
-  if (g.log && g.log !== $("log").textContent) {
-    $("log").textContent = g.log;
-  }
-
-  if (g.started && !g.over) {
-    updateTimer(g);
-  } else {
-    clearInterval(timerInterval);
-    $("timer").textContent = "--";
-  }
-
-  if (g.round !== lastRoundShown) {
-    lastRoundShown = g.round;
-  }
+  updateTimer(room);
+  tryResolveRound(room);
 }
 
-function updateTimer(g) {
-  clearInterval(timerInterval);
+function setButtons(enabled) {
+  document.querySelectorAll("[data-action]").forEach(btn => {
+    btn.disabled = !enabled;
+  });
+}
+
+function updateTimer(room) {
+  stopTimer();
 
   function tick() {
-    const end = g.phase === "rps" ? g.rpsDeadline : g.deadline;
-    if (!end) {
-      $("timer").textContent = "--";
-      return;
-    }
-
-    const left = Math.max(0, Math.ceil((end - Date.now()) / 1000));
-    $("timer").textContent = left;
-
-    if (left <= 0 && isHost()) {
-      if (g.phase === "action") resolveActions();
-      if (g.phase === "rps") resolveRpsTimeout();
-    }
+    if (!currentRoom || currentRoom.status !== "playing") return;
+    const remaining = Math.max(0, Math.ceil(((currentRoom.deadline || 0) - Date.now()) / 1000));
+    $("timer").textContent = remaining + "초";
+    if (remaining <= 0) handleTimeout(currentRoom);
   }
 
   tick();
   timerInterval = setInterval(tick, 250);
 }
 
-// ========================================
-// 6. 설정 및 대전 시작
-// ========================================
-async function applySettings() {
-  if (!isHost() || !roomData || roomData.game.started) return;
-
-  const hp = safeNumber($("hpSetting").value, 1, 999, 10);
-  const actionTime = safeNumber($("timeSetting").value, 3, 120, 15);
-
-  await roomRef.child("settings").set({ hp, actionTime });
-  alert("설정을 저장했어요!");
-}
-
-async function startGame() {
-  if (!isHost() || !roomData) return;
-
-  if (!roomData.players?.p1 || !roomData.players?.p2) {
-    alert("두 명이 모두 참가해야 시작할 수 있어요.");
-    return;
-  }
-
-  const hp = safeNumber(roomData.settings?.hp, 1, 999, 10);
-  const actionTime = safeNumber(roomData.settings?.actionTime, 3, 120, 15);
-
-  await roomRef.child("game").set({
-    started: true,
-    over: false,
-    round: 1,
-    hp1: hp,
-    hp2: hp,
-    reflect1: true,
-    reflect2: true,
-    phase: "action",
-    choices: {},
-    rps: {},
-    result: "대전 시작!",
-    log: "대전 시작!\n",
-    deadline: Date.now() + actionTime * 1000,
-    rpsDeadline: null
-  });
-
-  await roomRef.child("settings").set({ hp, actionTime });
-}
-
-// ========================================
-// 7. 행동 선택
-// ========================================
 async function chooseAction(action) {
-  if (!roomData || busy) return;
+  const room = currentRoom;
+  if (!room || room.status !== "playing" || resolving) return;
+  if (room.choices && room.choices[mySlot]) return;
 
-  const g = roomData.game;
-  if (!g?.started || g.over || g.phase !== "action") return;
-  if (g.choices?.[myRole]) return;
-
-  if (action === "reflect" && !g["reflect" + myRole.slice(1)]) {
-    alert("반사는 아직 충전되지 않았어요. 패스를 사용하세요.");
+  const me = room.players && room.players[mySlot];
+  if (!me || me.uid !== uid) {
+    $("status").textContent = "플레이어 정보를 확인할 수 없습니다.";
     return;
   }
 
-  busy = true;
-  try {
-    await roomRef.child("game/choices/" + myRole).set({
-      action,
-      at: firebase.database.ServerValue.TIMESTAMP
-    });
-  } finally {
-    busy = false;
+  if (action === "reflect" && !me.reflectReady) {
+    $("status").textContent = "반사는 아직 재충전되지 않았습니다. 패스를 사용하세요.";
+    return;
   }
 
-  // 방장만 결과를 판정한다.
-  if (isHost()) await resolveActions();
+  setButtons(false);
+
+  try {
+    const choiceRef = db.ref("rooms/" + roomId + "/choices/" + mySlot);
+    const result = await choiceRef.transaction(existing => {
+      if (existing) return;
+      if (!currentRoom || currentRoom.status !== "playing") return;
+      if (Date.now() > (currentRoom.deadline || 0)) return;
+      return { action, at: Date.now() };
+    }, undefined, false);
+
+    if (!result.committed) {
+      $("status").textContent = "선택이 반영되지 않았습니다. 상태를 확인하세요.";
+    }
+  } catch (err) {
+    $("status").textContent = "선택 오류: " + err.message;
+  }
 }
 
-async function resolveActions() {
-  if (!isHost() || !roomData || busy) return;
+async function handleTimeout(room) {
+  if (!room || room.status !== "playing" || resolving) return;
+  if (Date.now() < (room.deadline || 0)) return;
 
-  const g = roomData.game;
-  if (!g?.started || g.over || g.phase !== "action") return;
-
-  const c1 = g.choices?.p1;
-  const c2 = g.choices?.p2;
-  const timedOut = Date.now() >= (g.deadline || Infinity);
-
-  if ((!c1 || !c2) && !timedOut) return;
-
-  busy = true;
+  resolving = true;
   try {
-    // 두 명이 제한 시간 안에 선택하지 못하면 미선택자는 패스 처리
-    const a1 = c1?.action || "pass";
-    const a2 = c2?.action || "pass";
+    const ref = db.ref("rooms/" + roomId);
+    await ref.transaction(data => {
+      if (!data || data.status !== "playing") return;
+      if (Date.now() < (data.deadline || 0)) return;
 
-    let hp1 = g.hp1;
-    let hp2 = g.hp2;
-    let reflect1 = g.reflect1;
-    let reflect2 = g.reflect2;
-    const lines = [];
-
-    lines.push("라운드 " + g.round + ": " + actions[a1] + " / " + actions[a2]);
-
-    // 패스하면 반사 충전
-    if (a1 === "pass") reflect1 = true;
-    if (a2 === "pass") reflect2 = true;
-
-    if (a1 === "attack" && a2 === "attack") {
-      // 공격끼리 만나면 가위바위보 단계로 진입
-      await roomRef.child("game").update({
-        phase: "rps",
-        rps: {},
-        rpsDeadline: Date.now() + 2000,
-        result: "공격 대 공격! 2초 안에 가위바위보!",
-        log: (g.log || "") + lines.join("\n") + "\n공격끼리 만났어요! 가위바위보!\n"
-      });
-      return;
-    }
-
-    // 공격과 방어
-    if (a1 === "attack" && a2 === "defend") {
-      lines.push("플레이어 2가 공격을 막았어요.");
-    } else if (a2 === "attack" && a1 === "defend") {
-      lines.push("플레이어 1이 공격을 막았어요.");
-    }
-
-    // 반사는 상대 공격을 되돌려 보낸다.
-    if (a1 === "attack" && a2 === "reflect") {
-      if (reflect2) {
-        hp1--;
-        reflect2 = false;
-        lines.push("플레이어 2의 반사! 플레이어 1이 피해를 받았어요.");
-      } else {
-        hp2--;
-        lines.push("플레이어 2의 반사가 충전되지 않아 공격이 적중했어요.");
+      data.choices = data.choices || {};
+      for (const slot of [0, 1]) {
+        if (!data.choices[slot]) {
+          data.choices[slot] = { action: "pass", at: Date.now(), timeout: true };
+        }
       }
-    } else if (a2 === "attack" && a1 === "reflect") {
-      if (reflect1) {
-        hp2--;
-        reflect1 = false;
-        lines.push("플레이어 1의 반사! 플레이어 2가 피해를 받았어요.");
-      } else {
-        hp1--;
-        lines.push("플레이어 1의 반사가 충전되지 않아 공격이 적중했어요.");
+      data.updatedAt = Date.now();
+      return data;
+    }, undefined, false);
+  } catch (err) {
+    $("status").textContent = "시간 종료 처리 오류: " + err.message;
+  } finally {
+    resolving = false;
+  }
+  if (currentRoom) tryResolveRound(currentRoom);
+}
+
+async function tryResolveRound(room) {
+  if (!room || room.status !== "playing" || resolving) return;
+  const choices = room.choices || {};
+  if (!choices[0] || !choices[1]) return;
+
+  resolving = true;
+  stopTimer();
+
+  try {
+    const ref = db.ref("rooms/" + roomId);
+    await ref.transaction(data => {
+      if (!data || data.status !== "playing") return;
+      if (data.resolvedRound === data.round) return;
+
+      const c = data.choices || {};
+      if (!c[0] || !c[1]) return;
+
+      const p = data.players;
+      const a = c[0].action;
+      const b = c[1].action;
+      let message = [];
+
+      function damage(slot, amount, reason) {
+        p[slot].hp = Math.max(0, p[slot].hp - amount);
+        message.push(p[slot].name + " " + amount + " 피해 (" + reason + ")");
       }
-    } else if (a1 === "attack" && !["defend", "reflect", "attack"].includes(a2)) {
-      hp2--;
-      lines.push("플레이어 1의 공격 적중!");
-    } else if (a2 === "attack" && !["defend", "reflect", "attack"].includes(a1)) {
-      hp1--;
-      lines.push("플레이어 2의 공격 적중!");
-    }
 
-    await finishRound({ hp1, hp2, reflect1, reflect2, lines });
+      function processAttack(attacker, defender, defenderAction) {
+        const target = p[defender];
+
+        if (defenderAction === "defend") {
+          message.push(target.name + " 방어 성공!");
+        } else if (defenderAction === "reflect" && target.reflectReady) {
+          target.reflectReady = false;
+          damage(attacker, 1, "반사");
+          message.push(target.name + " 반사 성공!");
+        } else {
+          damage(defender, 1, "공격");
+        }
+      }
+
+      if (a === "attack" && b === "attack") {
+        const delta = Math.abs((c[0].at || 0) - (c[1].at || 0));
+        if (delta <= 2000) {
+          if ((c[0].at || 0) === (c[1].at || 0)) {
+            message.push("동시 공격! 두 공격 모두 실패!");
+          } else {
+            const faster = c[0].at < c[1].at ? 0 : 1;
+            damage(1 - faster, 1, "빠른 공격");
+            message.push(p[faster].name + "의 공격이 먼저 적중!");
+          }
+        } else {
+          const faster = c[0].at < c[1].at ? 0 : 1;
+          damage(1 - faster, 1, "빠른 공격");
+          message.push(p[faster].name + "의 공격이 먼저 적중!");
+        }
+      } else {
+        if (a === "attack") processAttack(0, 1, b);
+        if (b === "attack") processAttack(1, 0, a);
+      }
+
+      if (a === "pass") {
+        p[0].reflectReady = true;
+        message.push(p[0].name + " 반사 재충전!");
+      }
+      if (b === "pass") {
+        p[1].reflectReady = true;
+        message.push(p[1].name + " 반사 재충전!");
+      }
+
+      data.history = data.history || {};
+      data.history[data.round] = {
+        message,
+        actions: { 0: a, 1: b },
+        at: Date.now()
+      };
+      data.resolvedRound = data.round;
+      data.lastResult = message.join("\n");
+      data.updatedAt = Date.now();
+
+      if (p[0].hp <= 0 && p[1].hp <= 0) {
+        data.status = "finished";
+        data.winner = "draw";
+      } else if (p[0].hp <= 0) {
+        data.status = "finished";
+        data.winner = 1;
+      } else if (p[1].hp <= 0) {
+        data.status = "finished";
+        data.winner = 0;
+      } else {
+        data.status = "result";
+        data.nextRoundAt = Date.now() + 1800;
+      }
+
+      return data;
+    }, undefined, false);
+  } catch (err) {
+    $("status").textContent = "라운드 처리 오류: " + err.message;
   } finally {
-    busy = false;
+    resolving = false;
   }
 }
 
-async function finishRound({ hp1, hp2, reflect1, reflect2, lines }) {
-  const g = roomData.game;
-  const over = hp1 <= 0 || hp2 <= 0;
-  let result = lines.join("\n");
+let lastResolvedRound = 0;
+let nextRoundTimer = null;
 
-  if (over) {
-    if (hp1 <= 0 && hp2 <= 0) result += "\n무승부!";
-    else if (hp1 <= 0) result += "\n플레이어 2 승리!";
-    else result += "\n플레이어 1 승리!";
+function watchRoundResult(room) {
+  const r = room.resolvedRound;
+  if (!r || r === lastResolvedRound) return;
+  lastResolvedRound = r;
+
+  const hist = room.history && room.history[r];
+  if (hist) {
+    appendLog("라운드 " + r);
+    appendLog("나: " + labels[hist.actions[mySlot]]);
+    appendLog("상대: " + labels[hist.actions[1 - mySlot]]);
+    (hist.message || []).forEach(appendLog);
   }
 
-  const newLog = result + "\n\n" + (g.log || "");
-
-  await roomRef.child("game").update({
-    hp1: Math.max(0, hp1),
-    hp2: Math.max(0, hp2),
-    reflect1,
-    reflect2,
-    phase: over ? "over" : "action",
-    over,
-    result,
-    log: newLog,
-    round: g.round + (over ? 0 : 1),
-    choices: {},
-    rps: {},
-    rpsDeadline: null,
-    deadline: over ? null : Date.now() + (roomData.settings?.actionTime || 15) * 1000
-  });
-}
-
-// ========================================
-// 8. 가위바위보
-// ========================================
-async function chooseRps(choice) {
-  if (!roomData || busy) return;
-
-  const g = roomData.game;
-  if (g.phase !== "rps" || g.over || g.rps?.[myRole]) return;
-
-  busy = true;
-  try {
-    await roomRef.child("game/rps/" + myRole).set({
-      choice,
-      at: firebase.database.ServerValue.TIMESTAMP
-    });
-
-    const latest = (await roomRef.child("game").get()).val();
-
-    if (isHost() && latest?.rps?.p1 && latest?.rps?.p2) {
-      await resolveRps(latest);
-    }
-  } finally {
-    busy = false;
+  if (room.status === "result" && room.nextRoundAt) {
+    if (nextRoundTimer) clearTimeout(nextRoundTimer);
+    nextRoundTimer = setTimeout(async () => {
+      try {
+        await db.ref("rooms/" + roomId).transaction(data => {
+          if (!data || data.status !== "result") return;
+          if (data.round !== r) return;
+          data.round += 1;
+          data.choices = {};
+          data.deadline = Date.now() + (Number(data.settings.seconds) || 15) * 1000;
+          data.status = "playing";
+          data.updatedAt = Date.now();
+          return data;
+        }, undefined, false);
+      } catch (e) {
+        $("status").textContent = "다음 라운드 시작 오류: " + e.message;
+      }
+    }, Math.max(0, room.nextRoundAt - Date.now()));
   }
 }
 
-async function resolveRpsTimeout() {
-  if (!isHost() || !roomData || busy) return;
+const originalRenderRoom = renderRoom;
+renderRoom = function(room) {
+  originalRenderRoom(room);
+  watchRoundResult(room);
+};
 
-  const g = roomData.game;
-  if (g.phase !== "rps" || Date.now() < (g.rpsDeadline || Infinity)) return;
+document.querySelectorAll("[data-action]").forEach(btn => {
+  btn.addEventListener("click", () => chooseAction(btn.dataset.action));
+});
 
-  busy = true;
-  try {
-    const latest = (await roomRef.child("game").get()).val();
-    if (latest?.phase !== "rps") return;
-
-    if (latest.rps?.p1 && latest.rps?.p2) {
-      await resolveRps(latest);
-      return;
-    }
-
-    const c1 = latest.rps?.p1?.choice;
-    const c2 = latest.rps?.p2?.choice;
-    const lines = [];
-
-    if (!c1 && !c2) {
-      lines.push("가위바위보 시간 초과! 두 공격 모두 실패!");
-    } else if (!c1) {
-      latest.hp1--;
-      lines.push("플레이어 1 시간 초과! 플레이어 2의 공격 성공!");
-    } else {
-      latest.hp2--;
-      lines.push("플레이어 2 시간 초과! 플레이어 1의 공격 성공!");
-    }
-
-    await finishRps(latest, lines);
-  } finally {
-    busy = false;
-  }
-}
-
-async function resolveRps(g) {
-  if (!isHost() || g.phase !== "rps") return;
-
-  const a = g.rps?.p1?.choice;
-  const b = g.rps?.p2?.choice;
-  if (!a || !b) return;
-
-  let hp1 = g.hp1;
-  let hp2 = g.hp2;
-  const lines = [];
-
-  if (a === b) {
-    lines.push("가위바위보 무승부! 두 공격 모두 실패!");
-  } else {
-    const beats = {
-      rock: "scissors",
-      scissors: "paper",
-      paper: "rock"
-    };
-
-    if (beats[a] === b) {
-      hp2--;
-      lines.push("플레이어 1의 공격 성공!");
-    } else {
-      hp1--;
-      lines.push("플레이어 2의 공격 성공!");
-    }
-  }
-
-  await finishRps(g, lines, hp1, hp2);
-}
-
-async function finishRps(g, lines, hp1 = g.hp1, hp2 = g.hp2) {
-  const over = hp1 <= 0 || hp2 <= 0;
-
-  if (over) {
-    if (hp1 <= 0 && hp2 <= 0) lines.push("무승부!");
-    else if (hp1 <= 0) lines.push("플레이어 2 승리!");
-    else lines.push("플레이어 1 승리!");
-  }
-
-  await roomRef.child("game").update({
-    hp1: Math.max(0, hp1),
-    hp2: Math.max(0, hp2),
-    phase: over ? "over" : "action",
-    over,
-    result: lines.join("\n"),
-    log: lines.join("\n") + "\n\n" + (g.log || ""),
-    round: g.round + (over ? 0 : 1),
-    choices: {},
-    rps: {},
-    rpsDeadline: null,
-    deadline: over ? null : Date.now() + (roomData.settings?.actionTime || 15) * 1000
-  });
-}
-
-// ========================================
-// 9. 버튼 이벤트
-// ========================================
 $("createBtn").addEventListener("click", createRoom);
 $("joinBtn").addEventListener("click", joinRoom);
-$("settingsBtn").addEventListener("click", applySettings);
-$("startBtn").addEventListener("click", startGame);
 
 $("copyBtn").addEventListener("click", async () => {
   try {
-    await navigator.clipboard.writeText(roomId);
-    alert("방 코드 " + roomId + " 를 복사했어요!");
+    await navigator.clipboard.writeText(roomId || "");
+    $("status").textContent = "방 코드를 복사했습니다!";
   } catch {
-    prompt("이 코드를 복사해서 상대에게 보내세요.", roomId);
+    prompt("방 코드를 복사하세요.", roomId || "");
   }
 });
 
-document.querySelectorAll("[data-action]").forEach(button => {
-  button.addEventListener("click", () => chooseAction(button.dataset.action));
+$("leaveBtn").addEventListener("click", () => {
+  detachRoom();
+  showLobby();
+  setLobbyMessage("로비로 돌아왔습니다.");
 });
 
-document.querySelectorAll("[data-rps]").forEach(button => {
-  button.addEventListener("click", () => chooseRps(button.dataset.rps));
+auth.signInAnonymously().then(cred => {
+  uid = cred.user.uid;
+  setLobbyMessage("로그인 완료! 방을 만들거나 참가하세요.");
+}).catch(err => {
+  setLobbyMessage("로그인 실패: " + err.message +
+    "\nFirebase Authentication에서 익명 로그인이 켜져 있는지 확인하세요.");
 });
-
-initialize();
 </script>
 </body>
-  </html>
+</html>
